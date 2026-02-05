@@ -1,6 +1,6 @@
 """
-Pydantic models for request/response validation.
-Defines the API contract for the honeypot endpoint.
+Enhanced Pydantic models for comprehensive API request/response validation.
+Optimized for maximum intelligence capture.
 """
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field
@@ -9,7 +9,7 @@ from enum import Enum
 
 
 class ScamType(str, Enum):
-    """Classification of scam types."""
+    """Comprehensive scam type classification."""
     LOTTERY_FRAUD = "lottery_fraud"
     BANK_IMPERSONATION = "bank_impersonation"
     GOVERNMENT_IMPERSONATION = "government_impersonation"
@@ -20,94 +20,156 @@ class ScamType(str, Enum):
     JOB_SCAM = "job_scam"
     INVESTMENT_SCAM = "investment_scam"
     ROMANCE_SCAM = "romance_scam"
+    DELIVERY_SCAM = "delivery_scam"
+    KYC_SCAM = "kyc_scam"
     UNKNOWN = "unknown"
 
 
+class ThreatLevel(str, Enum):
+    """Threat severity levels."""
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    CRITICAL = "critical"
+
+
 class URLAnalysis(BaseModel):
-    """Analysis of a detected URL."""
+    """Detailed URL threat analysis."""
     url: str
     is_suspicious: bool = False
     threat_indicators: List[str] = Field(default_factory=list)
+    threat_level: str = "low"
+
+
+class FinancialIntelligence(BaseModel):
+    """Extracted financial information."""
+    upi_ids: List[str] = Field(default_factory=list)
+    bank_accounts: List[str] = Field(default_factory=list)
+    ifsc_codes: List[str] = Field(default_factory=list)
+    money_amounts: List[str] = Field(default_factory=list)
+
+
+class ContactIntelligence(BaseModel):
+    """Extracted contact information."""
+    phone_numbers: List[str] = Field(default_factory=list)
+    email_addresses: List[str] = Field(default_factory=list)
+    messaging_numbers: List[str] = Field(default_factory=list)
+
+
+class IdentityIntelligence(BaseModel):
+    """Extracted identity/PII information."""
+    names: List[str] = Field(default_factory=list)
+    organizations: List[str] = Field(default_factory=list)
+    aadhaar_numbers: List[str] = Field(default_factory=list)
+    pan_numbers: List[str] = Field(default_factory=list)
+    reference_numbers: List[str] = Field(default_factory=list)
 
 
 class IntelligenceOutput(BaseModel):
-    """Extracted intelligence from the conversation."""
+    """Comprehensive extracted intelligence from conversation."""
+    # Financial data
     upi_ids: List[str] = Field(default_factory=list, description="Extracted UPI IDs")
-    bank_accounts: List[str] = Field(default_factory=list, description="Extracted bank account numbers")
-    ifsc_codes: List[str] = Field(default_factory=list, description="Extracted IFSC codes")
-    phone_numbers: List[str] = Field(default_factory=list, description="Extracted phone numbers")
-    urls: List[URLAnalysis] = Field(default_factory=list, description="Extracted and analyzed URLs")
-    email_addresses: List[str] = Field(default_factory=list, description="Extracted email addresses")
-    scam_tactics: List[str] = Field(default_factory=list, description="Identified scam tactics")
-    extracted_entities: Dict[str, Any] = Field(default_factory=dict, description="Other extracted entities")
+    bank_accounts: List[str] = Field(default_factory=list, description="Bank account numbers")
+    ifsc_codes: List[str] = Field(default_factory=list, description="IFSC codes")
+    
+    # Contact data
+    phone_numbers: List[str] = Field(default_factory=list, description="Phone numbers")
+    email_addresses: List[str] = Field(default_factory=list, description="Email addresses")
+    
+    # Web/URL data
+    urls: List[URLAnalysis] = Field(default_factory=list, description="Analyzed URLs")
+    
+    # Identity data
+    scammer_names: List[str] = Field(default_factory=list, description="Names mentioned by scammer")
+    organizations: List[str] = Field(default_factory=list, description="Organizations claimed")
+    reference_numbers: List[str] = Field(default_factory=list, description="Case/reference numbers")
+    
+    # Scam tactics used
+    scam_tactics: List[str] = Field(default_factory=list, description="Identified tactics")
+    
+    # Additional extracted entities
+    extracted_entities: Dict[str, Any] = Field(default_factory=dict)
+    
+    # Meta
+    total_entities_extracted: int = 0
 
 
 class EngagementMetrics(BaseModel):
-    """Metrics about the honeypot engagement."""
+    """Detailed engagement metrics."""
     turn_count: int = 1
     information_extracted_count: int = 0
     engagement_quality: str = "medium"
     conversation_stage: str = "initial"
+    persona_used: str = "Unknown"
+    extraction_success_rate: float = 0.0
+
+
+class DetectionDetails(BaseModel):
+    """Detailed detection analysis."""
+    keyword_matches: Dict[str, List[str]] = Field(default_factory=dict)
+    heuristic_triggers: List[str] = Field(default_factory=list)
+    risk_score: float = 0.0
 
 
 class HoneypotRequest(BaseModel):
-    """Request body for the honeypot endpoint."""
-    message: Optional[str] = Field(None, description="The incoming message to analyze")
-    text: Optional[str] = Field(None, description="Alternative field name for message")
-    content: Optional[str] = Field(None, description="Alternative field name for message")
-    input: Optional[str] = Field(None, description="Alternative field name for message")
-    conversation_id: Optional[str] = Field(None, description="Optional conversation ID for multi-turn conversations")
-    metadata: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Optional metadata about the message")
+    """Flexible request body for the honeypot endpoint."""
+    message: Optional[str] = Field(None, description="The incoming scam message")
+    text: Optional[str] = Field(None, description="Alternative: message text")
+    content: Optional[str] = Field(None, description="Alternative: content")
+    input: Optional[str] = Field(None, description="Alternative: input")
+    msg: Optional[str] = Field(None, description="Alternative: msg")
+    conversation_id: Optional[str] = Field(None, description="Conversation ID for multi-turn")
+    metadata: Optional[Dict[str, Any]] = Field(default_factory=dict)
     
     def get_message(self) -> str:
-        """Get the message from whichever field was provided."""
-        return self.message or self.text or self.content or self.input or ""
-
+        """Get message from any of the accepted field names."""
+        return self.message or self.text or self.content or self.input or self.msg or ""
+    
     class Config:
-        extra = "allow"  # Allow extra fields
-        json_schema_extra = {
-            "example": {
-                "message": "Congratulations! You won Rs 50 lakh lottery. Send Rs 5000 to claim prize. UPI: claim@ybl",
-                "conversation_id": "conv_abc123",
-                "metadata": {"source": "sms", "sender": "+919876543210"}
-            }
-        }
+        extra = "allow"
 
 
 class HoneypotResponse(BaseModel):
-    """Response body from the honeypot endpoint."""
+    """Comprehensive response from the honeypot endpoint."""
+    # Core response
     conversation_id: str = Field(..., description="Unique conversation identifier")
-    is_scam: bool = Field(..., description="Whether the message is detected as a scam")
-    confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score of scam detection")
-    scam_type: Optional[str] = Field(None, description="Type of scam detected")
-    response: str = Field(..., description="AI-generated response to engage the scammer")
-    intelligence: IntelligenceOutput = Field(..., description="Extracted intelligence from the conversation")
-    engagement_metrics: EngagementMetrics = Field(..., description="Metrics about the engagement")
+    is_scam: bool = Field(..., description="Whether scam was detected")
+    confidence: float = Field(..., ge=0.0, le=1.0, description="Detection confidence")
+    scam_type: Optional[str] = Field(None, description="Classified scam type")
+    
+    # AI engagement
+    response: str = Field(..., description="AI-generated engagement response")
+    
+    # Intelligence
+    intelligence: IntelligenceOutput = Field(..., description="Extracted intelligence")
+    
+    # Metrics
+    engagement_metrics: EngagementMetrics = Field(..., description="Engagement metrics")
+    
+    # Optional detailed analysis
+    detection_details: Optional[DetectionDetails] = Field(None, description="Detection analysis")
+    
+    # Timestamp
     timestamp: str = Field(default_factory=lambda: datetime.utcnow().isoformat() + "Z")
-
+    
     class Config:
         json_schema_extra = {
             "example": {
                 "conversation_id": "conv_abc123",
                 "is_scam": True,
                 "confidence": 0.94,
-                "scam_type": "lottery_fraud",
-                "response": "Oh my! 50 lakh rupees? This is wonderful news! But I'm confused about the process. How do I send the money?",
+                "scam_type": "bank_impersonation",
+                "response": "Oh no! Which branch are you calling from? What is your name?",
                 "intelligence": {
-                    "upi_ids": ["claim@ybl"],
-                    "bank_accounts": [],
-                    "ifsc_codes": [],
-                    "phone_numbers": ["+919876543210"],
-                    "urls": [],
-                    "email_addresses": [],
-                    "scam_tactics": ["lottery_bait", "advance_fee_fraud"],
-                    "extracted_entities": {"claimed_amount": "50 lakh", "demanded_amount": "5000"}
+                    "upi_ids": ["scammer@ybl"],
+                    "bank_accounts": ["1234567890123"],
+                    "phone_numbers": ["9876543210"],
+                    "scam_tactics": ["authority_impersonation", "fear_tactics"]
                 },
                 "engagement_metrics": {
-                    "turn_count": 1,
-                    "information_extracted_count": 2,
-                    "engagement_quality": "high",
-                    "conversation_stage": "initial"
+                    "turn_count": 2,
+                    "information_extracted_count": 3,
+                    "engagement_quality": "high"
                 },
                 "timestamp": "2026-02-05T14:30:00Z"
             }
@@ -119,6 +181,7 @@ class HealthResponse(BaseModel):
     status: str = "healthy"
     version: str
     timestamp: str = Field(default_factory=lambda: datetime.utcnow().isoformat() + "Z")
+    model: Optional[str] = None
 
 
 class ErrorResponse(BaseModel):

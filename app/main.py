@@ -135,7 +135,7 @@ async def honeypot_endpoint(
             )
         else:
             intelligence = intelligence_extractor.build_intelligence_output(
-                conversation_extracted=detection_result.extracted_patterns,
+                extracted=detection_result.extracted_patterns,
                 scam_tactics=detection_result.tactics
             )
         
@@ -157,7 +157,9 @@ async def honeypot_endpoint(
             turn_count=engagement_info.get("turn_count", 1),
             information_extracted_count=info_count,
             engagement_quality=quality,
-            conversation_stage=engagement_info.get("engagement_stage", "initial")
+            conversation_stage=engagement_info.get("engagement_stage", "initial"),
+            persona_used=engagement_info.get("persona", "Unknown"),
+            extraction_success_rate=intelligence.total_entities_extracted / max(engagement_info.get("turn_count", 1), 1)
         )
         
         # Build response
