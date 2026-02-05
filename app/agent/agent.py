@@ -389,5 +389,53 @@ Generate a response that continues the conversation and extracts more informatio
         return personas.get(name, PersonaLibrary.get_random_persona())
 
 
+    async def verify_scam_with_ai(self, message: str) -> Dict[str, Any]:
+        """
+        Use the LLM to perform a high-accuracy secondary verification of a scam message.
+        This provides the 'best training' performance by utilizing the LLM's classification abilities.
+        """
+        prompt = f"""Analyze the following message and determine if it is a scam. 
+Return your response in EXACTLY this JSON format (no other text):
+{{
+  "is_scam": true/false,
+  "confidence": 0.0 to 1.0,
+  "scam_type": "one of: lottery_fraud, bank_impersonation, government_impersonation, upi_fraud, job_scam, investment_scam, phishing, other",
+  "reason": "brief explanation"
+}}
+
+MESSAGE to analyze:
+"{message}"
+"""
+        
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.post(
+                    f"{self.settings.openrouter_base_url}/chat/completions",
+                    headers={
+                        "Authorization": f"Bearer {self.settings.openrouter_api_key}",
+                        "Content-Type": "application/json",
+                    },
+                    json={
+                        "model": self.settings.openrouter_model,
+                        "messages": [{"role": "user", "content": prompt}],
+                        "max_tokens": 150,
+                        "temperature": 0.1, # Low temperature for accurate classification
+                    }
+                )
+                response.raise_for_status()
+                data = response.json()
+                content = data["choices"][0]["message"]["content"].strip()
+                
+                # Extract JSON if there's surrounding text
+                import json
+                if "{" in content and "}" in content:
+                    content = content[content.find("{"):content.rfind("}")+1]
+                
+                return json.loads(content)
+        except Exception as e:
+            print(f"Internal AI Verify error: {e}")
+            return {"is_scam": False, "confidence": 0.0}
+
 # Singleton instance
 honeypot_agent = HoneypotAgent()
+

@@ -110,11 +110,25 @@ async def honeypot_endpoint(
             "This is a test message for endpoint validation."
         )
         
-        # Get optional conversation ID
-        conversation_id = body.get("conversation_id") or f"conv_{uuid.uuid4().hex[:12]}"
-        
         # Step 1: Detect scam intent
         detection_result = scam_detector.detect(message)
+        
+        # Step 1.5: ELITE PERFORMANCE - AI Verification for borderline cases (between 0.4 and 0.8)
+        # This uses the "best training" of the LLM to verify tricky cases
+        if 0.3 < detection_result.confidence < 0.9 and settings.openrouter_api_key:
+            try:
+                ai_verification = await honeypot_agent.verify_scam_with_ai(message)
+                if ai_verification.get("is_scam"):
+                    # Boost confidence if AI agrees it's a scam
+                    detection_result.confidence = max(detection_result.confidence, ai_verification.get("confidence", 0.95))
+                    detection_result.is_scam = True
+                    if ai_verification.get("scam_type"):
+                        detection_result.scam_type = ai_verification.get("scam_type")
+            except Exception as e:
+                print(f"AI Verification error: {e}")
+        
+        # Get optional conversation ID
+        conversation_id = body.get("conversation_id") or f"conv_{uuid.uuid4().hex[:12]}"
         
         # Step 2: Generate engagement response
         response_text, engagement_info = await honeypot_agent.generate_response(
