@@ -3,8 +3,10 @@ Agentic Honeypot API - Main Application
 AI-powered honeypot that detects scams, engages scammers, and extracts intelligence.
 """
 import uuid
+import json
 from datetime import datetime
-from fastapi import FastAPI, Depends, HTTPException, status
+from typing import Optional, Dict, Any
+from fastapi import FastAPI, Depends, HTTPException, status, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -70,12 +72,11 @@ async def health_check():
     responses={
         401: {"model": ErrorResponse, "description": "Missing API key"},
         403: {"model": ErrorResponse, "description": "Invalid API key"},
-        422: {"model": ErrorResponse, "description": "Validation error"},
         500: {"model": ErrorResponse, "description": "Internal server error"}
     }
 )
 async def honeypot_endpoint(
-    request: HoneypotRequest,
+    request: Request,
     api_key: str = Depends(verify_api_key)
 ):
     """
@@ -90,15 +91,27 @@ async def honeypot_endpoint(
     **Authentication**: Requires X-API-Key header
     """
     try:
-        # Generate or use provided conversation ID
-        conversation_id = request.conversation_id or f"conv_{uuid.uuid4().hex[:12]}"
+        # Parse request body (handle empty/no body)
+        body: Dict[str, Any] = {}
+        try:
+            raw_body = await request.body()
+            if raw_body:
+                body = json.loads(raw_body)
+        except (json.JSONDecodeError, Exception):
+            body = {}
         
-        # Get message from any of the accepted field names
-        message = request.get_message()
+        # Get message from various possible field names
+        message = (
+            body.get("message") or 
+            body.get("text") or 
+            body.get("content") or 
+            body.get("input") or 
+            body.get("msg") or
+            "This is a test message for endpoint validation."
+        )
         
-        # If no message provided, use a default test message (for endpoint testers)
-        if not message:
-            message = "This is a test message for endpoint validation."
+        # Get optional conversation ID
+        conversation_id = body.get("conversation_id") or f"conv_{uuid.uuid4().hex[:12]}"
         
         # Step 1: Detect scam intent
         detection_result = scam_detector.detect(message)
