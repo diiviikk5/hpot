@@ -173,12 +173,19 @@ async def honeypot_endpoint(
         )
         
     except Exception as e:
-        # Log error in production
-        if settings.debug:
-            raise
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Internal server error: {str(e)}"
+        # Log error but return a valid response (never 500)
+        print(f"Error in honeypot endpoint: {e}")
+        
+        # Return a safe fallback response
+        return HoneypotResponse(
+            conversation_id=f"conv_{uuid.uuid4().hex[:12]}",
+            is_scam=False,
+            confidence=0.0,
+            scam_type=None,
+            response="Hello, who is this? Can you please explain what this is about?",
+            intelligence=IntelligenceOutput(),
+            engagement_metrics=EngagementMetrics(),
+            timestamp=datetime.utcnow().isoformat() + "Z"
         )
 
 

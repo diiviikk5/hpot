@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     
     # OpenRouter Configuration (primary - FREE models available)
     openrouter_api_key: Optional[str] = None
-    openrouter_model: str = "google/gemma-2-9b-it:free"  # Confirmed free model!
+    openrouter_model: str = "google/gemma-2-9b-it"  # Free model (no :free suffix needed)
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
     
     # Gemini Configuration (backup)
