@@ -117,6 +117,7 @@ async def honeypot_endpoint(
         # This uses the "best training" of the LLM to verify tricky cases
         if 0.3 < detection_result.confidence < 0.9 and settings.openrouter_api_key:
             try:
+                print(f"DEBUG: Triggering AI Verification for borderline case (confidence: {detection_result.confidence})")
                 ai_verification = await honeypot_agent.verify_scam_with_ai(message)
                 if ai_verification.get("is_scam"):
                     # Boost confidence if AI agrees it's a scam

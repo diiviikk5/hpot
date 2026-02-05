@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     
     # App Info
     app_name: str = "Agentic Honeypot API"
-    app_version: str = "1.2.0"
+    app_version: str = "1.2.1"
     
     class Config:
         env_file = ".env"
