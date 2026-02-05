@@ -14,7 +14,7 @@ from .config import get_settings
 from .auth import verify_api_key
 from .models import (
     HoneypotRequest, HoneypotResponse, HealthResponse, ErrorResponse,
-    IntelligenceOutput, EngagementMetrics
+    IntelligenceOutput, EngagementMetrics, DetectionDetails
 )
 from .detection.detector import scam_detector
 from .agent.agent import honeypot_agent
