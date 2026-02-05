@@ -39,6 +39,20 @@ TEST_CASES = [
         "must_extract": ["http://sbi-kyc-verify.xyz/login"]
     },
     {
+        "name": "Hindi/Hinglish Scam",
+        "message": "Badhai ho! Aapka number ₹25,00,000 lottery ke liye select hua hai. Turant contact karein WhatsApp par: 9988776655. Sirf 2 ghante bache hain!",
+        "expected_scam": True,
+        "expected_type": "lottery_fraud",
+        "must_extract": ["9988776655"]
+    },
+    {
+        "name": "Sarkari/Police Threat (Hinglish)",
+        "message": "Cyber Crime Cell se bol raha hoon. Aapke account se illegal drugs transaction hui hai. Case No CBI-998. Arrest warrant se bachne ke liye Inspector Ko call karein: 9112233445",
+        "expected_scam": True,
+        "expected_type": "government_impersonation",
+        "must_extract": ["9112233445"]
+    },
+    {
         "name": "False Positive Case (Legit OTP)",
         "message": "123456 is your secret OTP for transaction at Amazon. Do not share this with anyone. SBI Bank.",
         "expected_scam": False,

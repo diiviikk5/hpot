@@ -63,6 +63,11 @@ async def health_check():
     )
 
 
+@app.get("/api/version", tags=["Health"])
+async def get_version():
+    """Return API version."""
+    return {"version": settings.app_version, "status": "active"}
+
 # ============== Main Honeypot Endpoint ==============
 
 @app.post(
