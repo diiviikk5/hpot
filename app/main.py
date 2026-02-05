@@ -171,6 +171,11 @@ async def honeypot_endpoint(
             response=response_text,
             intelligence=intelligence,
             engagement_metrics=engagement_metrics,
+            detection_details=DetectionDetails(
+                keyword_matches=detection_result.keyword_matches,
+                heuristic_triggers=detection_result.heuristic_triggers,
+                risk_score=round(detection_result.risk_score, 2)
+            ),
             timestamp=datetime.utcnow().isoformat() + "Z"
         )
         
