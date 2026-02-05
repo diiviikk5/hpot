@@ -53,6 +53,13 @@ TEST_CASES = [
         "must_extract": ["9112233445"]
     },
     {
+        "name": "Romance Scam",
+        "message": "Hello dear, I am Sgt. Sarah from US Army. I found your profile and really liked you. I am sending a surprise gift box with gold and dollars. Please pay ₹45,000 for customs clearance to this account: 1234567890, IFSC: SBIN0001234.",
+        "expected_scam": True,
+        "expected_type": "romance_scam",
+        "must_extract": ["1234567890", "SBIN0001234"]
+    },
+    {
         "name": "False Positive Case (Legit OTP)",
         "message": "123456 is your secret OTP for transaction at Amazon. Do not share this with anyone. SBI Bank.",
         "expected_scam": False,

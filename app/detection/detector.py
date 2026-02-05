@@ -87,6 +87,33 @@ class ScamDetector:
         
         text_lower = message.lower()
         
+        # FALSE POSITIVE CHECK: Legitimate messages that look like scams
+        # These are common bank/service messages that shouldn't trigger detection
+        legit_patterns = [
+            # Legitimate OTP messages (contain "do not share" warning)
+            ('otp' in text_lower and 'do not share' in text_lower),
+            # Legitimate bank transaction alerts
+            ('debited' in text_lower and 'available balance' in text_lower),
+            ('credited' in text_lower and 'available balance' in text_lower),
+            # Legitimate delivery updates
+            ('your order' in text_lower and 'delivered' in text_lower),
+            ('out for delivery' in text_lower),
+            # Legitimate payment confirmations
+            ('payment successful' in text_lower),
+            ('transaction successful' in text_lower),
+        ]
+        
+        if any(legit_patterns):
+            return DetectionResult(
+                is_scam=False,
+                confidence=0.1,  # Very low confidence - likely legitimate
+                scam_type=None,
+                tactics=[],
+                extracted_patterns={},
+                keyword_matches={},
+                heuristic_triggers=['legit_message_pattern'],
+            )
+        
         # Layer 1: Keyword analysis
         keyword_scores, keyword_matches = self._analyze_keywords(text_lower)
         
