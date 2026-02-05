@@ -173,7 +173,7 @@ CRITICAL RULES:
 9. Create believable delays: "let me check with my family"
 10. Use simple, colloquial language
 
-EXTRACTED SO FAR: {', '.join(context.extracted_info.keys()) if context.extracted_info else 'Nothing yet'}
+EXTRACTED SO FAR: {', '.join(context.extracted_intelligence.keys()) if context.extracted_intelligence else 'Nothing yet'}
 
 Generate a response that continues the conversation and extracts more information.
 """
