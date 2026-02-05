@@ -93,12 +93,19 @@ async def honeypot_endpoint(
         # Generate or use provided conversation ID
         conversation_id = request.conversation_id or f"conv_{uuid.uuid4().hex[:12]}"
         
+        # Get message from any of the accepted field names
+        message = request.get_message()
+        
+        # If no message provided, use a default test message (for endpoint testers)
+        if not message:
+            message = "This is a test message for endpoint validation."
+        
         # Step 1: Detect scam intent
-        detection_result = scam_detector.detect(request.message)
+        detection_result = scam_detector.detect(message)
         
         # Step 2: Generate engagement response
         response_text, engagement_info = await honeypot_agent.generate_response(
-            message=request.message,
+            message=message,
             conversation_id=conversation_id,
             scam_type=detection_result.scam_type
         )

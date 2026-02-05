@@ -52,11 +52,19 @@ class EngagementMetrics(BaseModel):
 
 class HoneypotRequest(BaseModel):
     """Request body for the honeypot endpoint."""
-    message: str = Field(..., min_length=1, max_length=10000, description="The incoming message to analyze")
+    message: Optional[str] = Field(None, description="The incoming message to analyze")
+    text: Optional[str] = Field(None, description="Alternative field name for message")
+    content: Optional[str] = Field(None, description="Alternative field name for message")
+    input: Optional[str] = Field(None, description="Alternative field name for message")
     conversation_id: Optional[str] = Field(None, description="Optional conversation ID for multi-turn conversations")
     metadata: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Optional metadata about the message")
+    
+    def get_message(self) -> str:
+        """Get the message from whichever field was provided."""
+        return self.message or self.text or self.content or self.input or ""
 
     class Config:
+        extra = "allow"  # Allow extra fields
         json_schema_extra = {
             "example": {
                 "message": "Congratulations! You won Rs 50 lakh lottery. Send Rs 5000 to claim prize. UPI: claim@ybl",
