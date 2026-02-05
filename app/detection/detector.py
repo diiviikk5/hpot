@@ -305,33 +305,48 @@ class ScamDetector:
         heuristic_score: float,
         combination_score: float
     ) -> float:
-        """Calculate final confidence score."""
-        # Weight the different components
+        """
+        Calculate final confidence score with high sensitivity to risk signals.
+        Optimized for high recall on obvious scams.
+        """
+        # Weight the different components - Shifted more weight to heuristics and patterns
         max_keyword_score = max(keyword_scores.values()) if keyword_scores else 0.0
-        avg_keyword_score = sum(keyword_scores.values()) / len(keyword_scores) if keyword_scores else 0.0
         
-        # Weighted combination
+        # Weighted combination logic
+        # Heuristics (40%) and Patterns (30%) are the strongest indicators
         final_score = (
-            max_keyword_score * 0.25 +
-            avg_keyword_score * 0.10 +
-            pattern_score * 0.20 +
-            heuristic_score * 0.35 +
+            max_keyword_score * 0.20 +
+            pattern_score * 0.30 +
+            heuristic_score * 0.40 +
             combination_score * 0.10
         )
         
-        # Boost if multiple strong signals
-        strong_signals = sum([
-            max_keyword_score > 0.5,
-            pattern_score > 0.3,
-            heuristic_score > 0.3,
-            combination_score > 0.2,
-        ])
+        # ELITE BOOST: If we have multiple high-confidence triggers, push to near 100%
+        # Rule of thumb: If it looks like a duck and quacks like a duck, it's a duck.
+        signals = []
+        if max_keyword_score > 0.7: signals.append("strong_keywords")
+        if pattern_score > 0.6: signals.append("strong_patterns")
+        if heuristic_score > 0.6: signals.append("strong_heuristics")
+        if combination_score > 0.3: signals.append("strong_combinations")
         
-        if strong_signals >= 3:
-            final_score = min(1.0, final_score * 1.3)
-        elif strong_signals >= 2:
-            final_score = min(1.0, final_score * 1.15)
+        # Massive boost for multi-signal detection
+        if len(signals) >= 3:
+            final_score = max(final_score, 0.98)
+        elif len(signals) >= 2:
+            final_score = max(final_score, 0.92)
+        elif len(signals) >= 1 and final_score > 0.5:
+            final_score = min(0.95, final_score * 1.2)
+            
+        # CRITICAL OVERRIDE: Certain combinations are 100% scams
+        critical_indicators = [
+            heuristic_score >= 0.8,  # Multiple high-risk heuristics
+            (pattern_score > 0.5 and heuristic_score > 0.5), # Pattern + Heuristic match
+            (max_keyword_score > 0.8 and pattern_score > 0.4) # Strong keywords + Pattern
+        ]
         
+        if any(critical_indicators):
+            final_score = max(final_score, 0.96)
+            
         return min(1.0, final_score)
     
     def _determine_scam_type(
