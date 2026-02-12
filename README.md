@@ -1,3 +1,4 @@
+#fuck this shit we lost
 # Agentic Honeypot API
 
 AI-powered honeypot system that detects scam communications, engages scammers via intelligent AI agents, and extracts actionable fraud intelligence.
